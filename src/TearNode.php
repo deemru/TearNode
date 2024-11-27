@@ -127,7 +127,8 @@ class TearNode
         $this->connecting = true;
         $this->connector->connect( $this->tcpNode )->then( function( $stream )
         {
-            ($this->onReport)( 's', 'TearNode: connect( ' . $this->tcpNode . ' )' );
+            $f = $this->onReport;
+            $f( 's', 'TearNode: connect( ' . $this->tcpNode . ' )' );
 
             $stream->on( 'data', function( $data ){ $this->onData( $data ); } );
             $stream->on( 'end', function(){ $this->onClose(); } );
@@ -142,7 +143,8 @@ class TearNode
         },
         function( \Exception $e )
         {
-            ($this->onReport)( 'e', 'TearNode: connect(): ' . $e->getMessage() );
+            $f = $this->onReport;
+            $f( 'e', 'TearNode: connect(): ' . $e->getMessage() );
             $this->retry();
         } );
     }
@@ -286,13 +288,15 @@ class TearNode
                             if( $onBlockOnce === false )
                             {
                                 $onBlockOnce = true;
-                                ($this->onBlock)();
+                                $f = $this->onBlock;
+                                $f();
                             }
                         }
                         if( $onMicroblockOnce === false )
                         {
                             $onMicroblockOnce = true;
-                            ($this->onMicroblock)();
+                            $f = $this->onMicroblock;
+                            $f();
                         }
                     }
                     else
@@ -302,7 +306,8 @@ class TearNode
                         if( $onTransactionOnce === false )
                         {
                             $onTransactionOnce = true;
-                            ($this->onTransaction)();
+                            $f = $this->onTransaction;
+                            $f();
                         }
                     }
                 }
@@ -316,7 +321,8 @@ class TearNode
 
     private function retry()
     {
-        ($this->onReport)( 'i', 'TearNode: retry(): delay for ' . $this->retryDelay . ' seconds...' );
+        $f = $this->onReport;
+        $f( 'i', 'TearNode: retry(): delay for ' . $this->retryDelay . ' seconds...' );
         $this->loop->addTimer( $this->retryDelay, function(){ $this->newStream(); } );
     }
 
@@ -326,7 +332,8 @@ class TearNode
         {
             $this->stream->close();
             $this->stream = false;
-            ($this->onReport)( 'e', 'TearNode: onClose(): ' . ( isset( $e ) ? $e->getMessage() : 'unknown reason' ) );
+            $f = $this->onReport;
+            $f( 'e', 'TearNode: onClose(): ' . ( isset( $e ) ? $e->getMessage() : 'unknown reason' ) );
             $this->retry();
         }
     }
