@@ -1,0 +1,28 @@
+{
+    "name": "deemru/tearnode",
+    "description": "Simple reactor on Waves Node",
+    "keywords": [ "wavesplatform" ],
+    "homepage": "http://github.com/deemru/TearNode",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Dmitrii Pichulin",
+            "email": "deem@deem.ru"
+        }
+    ],
+    "require": {
+        "deemru/waveskit": "^1.0",
+        "react/socket": "^1.16"
+    },
+    "autoload": {
+        "psr-4": {
+            "deemru\\": "src/"
+        }
+    },
+    "scripts": {
+        "test": [
+            "@php test/selftest.php"
+        ]
+    }
+}
