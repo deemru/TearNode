@@ -40,6 +40,11 @@ class TearNode
         return $tn->setParams();
     }
 
+    public function active()
+    {
+        return $this->stream !== false;
+    }
+
     private function defaultNodeAddress()
     {
         return '127.0.0.1';
@@ -330,8 +335,9 @@ class TearNode
     {
         if( $this->stream !== false )
         {
-            $this->stream->close();
+            $stream = $this->stream;
             $this->stream = false;
+            $stream->close();
             $f = $this->onReport;
             $f( 'e', 'TearNode: onClose(): ' . ( isset( $e ) ? $e->getMessage() : 'unknown reason' ) );
             $this->retry();
