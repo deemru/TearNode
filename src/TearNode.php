@@ -178,7 +178,7 @@ class TearNode
         $this->appName = 'waves' . $this->network;
         $this->version = '1.5.8';
         $this->nodeName = 'WavesTearNode';
-        $this->nonce = random_bytes( 8 );
+        $this->nonce = substr( $this->wk->blake2b256( mt_rand() . mt_rand() ), -8 );
         $this->address = '127.0.0.1';
         $this->port = '6868';
 
