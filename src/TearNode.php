@@ -62,7 +62,7 @@ class TearNode
         return function( $level, $message ){ $this->wk->log( $level, $message ); };
     }
 
-    public function setParams( $wk = null, $loop = null, $onBlock = false, $onMicroblock = false, $onTransaction = false, $onReport = false ) : TearNode
+    public function setParams( $wk = null, $loop = null, $onBlock = false, $onMicroblock = false, $onTransaction = false, $onReport = false )
     {
         $this->wk = isset( $wk ) ? $wk : $this->defaultWavesKit();
         $this->loop = isset( $loop ) ? $loop : Loop::get();
