@@ -17,11 +17,12 @@ class TearNode
     private $onTransaction;
     private $onReport;
 
-    private $magic;
     private $stream;
+    private $initiated;
+    private $handshaked;
+
+    private $magic;
     private $data;
-    private $first;
-    private $connecting;
     private $appName;
     private $version;
     private $nodeName;
@@ -42,7 +43,7 @@ class TearNode
 
     public function active()
     {
-        return $this->stream !== false;
+        return $this->handshaked;
     }
 
     private function defaultNodeAddress()
@@ -76,9 +77,10 @@ class TearNode
         $this->onTransaction = $onTransaction === false ? $this->defaultClosure() : $onTransaction;
         $this->onReport = $onReport === false ? $this->defaultReport() : $onReport;
         $this->magic = hex2bin( '12345678' );
-        $this->stream = false;
         $this->connector = new Connector( [], $this->loop );
-        $this->connecting = false;
+        $this->stream = false;
+        $this->initiated = false;
+        $this->handshaked = false;
         return $this;
     }
 
@@ -126,10 +128,10 @@ class TearNode
 
     private function newStream()
     {
-        if( $this->stream !== false || $this->connecting === true )
+        if( $this->initiated === true )
             return;
 
-        $this->connecting = true;
+        $this->initiated = true;
         $this->connector->connect( $this->tcpNode )->then( function( $stream )
         {
             $f = $this->onReport;
@@ -141,15 +143,15 @@ class TearNode
             $stream->on( 'error', function( \Exception $e ){ $this->onClose( $e ); } );
 
             $this->data = '';
-            $this->first = true;
             $this->stream = $stream;
-            $this->connecting = false;
             $this->stream->write( $this->myHandshake() );
         },
         function( \Exception $e )
         {
             $f = $this->onReport;
             $f( 'e', 'TearNode: connect(): ' . $e->getMessage() );
+
+            $this->initiated = false;
             $this->retry();
         } );
     }
@@ -214,10 +216,15 @@ class TearNode
         if( $this->stream === false )
             return;
 
-        if( $this->first === true )
+        if( $this->handshaked === false )
         {
-            $this->first = false;
-            return;
+            if( false !== strpos( $datain, $this->appName ) )
+            {
+                $this->handshaked = true;
+                return;
+            }
+
+            return $this->onClose( new \Exception( 'unexpected handshake' ) );
         }
 
         $datain = $this->data . $datain;
@@ -328,6 +335,7 @@ class TearNode
     {
         $f = $this->onReport;
         $f( 'i', 'TearNode: retry(): delay for ' . $this->retryDelay . ' seconds...' );
+
         $this->loop->addTimer( $this->retryDelay, function(){ $this->newStream(); } );
     }
 
@@ -335,11 +343,15 @@ class TearNode
     {
         if( $this->stream !== false )
         {
-            $stream = $this->stream;
-            $this->stream = false;
-            $stream->close();
             $f = $this->onReport;
             $f( 'e', 'TearNode: onClose(): ' . ( isset( $e ) ? $e->getMessage() : 'unknown reason' ) );
+
+            $stream = $this->stream;
+            $this->stream = false;
+            $this->initiated = false;
+            $this->handshaked = false;
+            $stream->close();
+
             $this->retry();
         }
     }
